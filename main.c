@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
-    
+
     // 初始化 PNG 支援
     int imgFlags = IMG_INIT_PNG;
     if (!(IMG_Init(imgFlags) & imgFlags)) {
@@ -27,8 +27,11 @@ int main(int argc, char* argv[]) {
 
     // import assets to textures
     // texture[0] is covered, [(color - 1) * 7 + type]
-    SDL_Texture* chessTextures[15] = { NULL }; 
+    SDL_Texture* chessTextures[15] = { NULL };
     UI_loadAssets(renderer, chessTextures);
+
+    // ==[RAY 加入]== 讀取選單與暫停圖片
+    UI_loadMenuAssets(renderer);
 
     bool quit = false;
     SDL_Event e;
@@ -37,6 +40,33 @@ int main(int argc, char* argv[]) {
     static int selC = -1;
 
     while (!quit) {
+        // ==[RAY 加入]== 1. 選單畫面攔截
+        if (UI_isInMenu()) {
+            while (SDL_PollEvent(&e) != 0) {
+                if (e.type == SDL_QUIT) quit = true;
+                UI_handleMenuEvent(&e, &game);
+            }
+            SDL_SetRenderDrawColor(renderer, 200, 160, 100, 255);
+            SDL_RenderClear(renderer);
+            UI_drawStartMenu(renderer);
+            SDL_RenderPresent(renderer);
+            continue; // 卡在選單，不執行後面的遊戲邏輯
+        }
+
+        // ==[RAY 加入]== 2. 暫停畫面攔截
+        if (UI_isPaused()) {
+            while (SDL_PollEvent(&e) != 0) {
+                if (e.type == SDL_QUIT) quit = true;
+            }
+            SDL_SetRenderDrawColor(renderer, 200, 160, 100, 255);
+            SDL_RenderClear(renderer);
+            UI_drawBoard(renderer, &game, chessTextures);
+            UI_drawSelection(renderer, selR, selC);
+            UI_drawPauseScreen(renderer); // 疊加畫上暫停圖示
+            SDL_RenderPresent(renderer);
+            continue; // 卡在暫停，不執行後面的遊戲邏輯
+        }
+
         bool turnEnded = false; // 用來標記本回合動作是否完成
 
         // --- 1. 事件處理 (Poll Event) ---
@@ -53,13 +83,17 @@ int main(int argc, char* argv[]) {
                         // A. 翻牌動作
                         if (IO_executeFlip(&game, row, col)) {
                             RULE_checkFirstMove(&game, row, col, P1);
-                            selR = -1; selC = -1; 
+                            selR = -1; selC = -1;
+
+                            // ==[RAY 加入]== 紀錄步數
+                            UI_recordMove(P1);
+
                             turnEnded = true;
-                        } 
+                        }
                         // B. 選取或移動/吃牌動作
                         else {
                             if (selR == -1) { // 尚未選取，嘗試選取
-                                if (game.grid[row][col].status == CHESS_OPEN && 
+                                if (game.grid[row][col].status == CHESS_OPEN &&
                                     game.grid[row][col].color == game.player_color[P1]) {
                                     selR = row; selC = col;
                                     printf("[Player] selected: (%d, %d)\n", selR, selC);
@@ -67,6 +101,10 @@ int main(int argc, char* argv[]) {
                             } else { // 已選取，嘗試移動或吃牌
                                 if (RULE_isValidMove(&game, selR, selC, row, col)) {
                                     IO_executeMove(&game, selR, selC, row, col);
+
+                                    // ==[RAY 加入]== 紀錄步數
+                                    UI_recordMove(P1);
+
                                     turnEnded = true;
                                 }
                                 selR = -1; selC = -1; // 只要進行第二次點擊，不論成功與否都重置
@@ -83,14 +121,29 @@ int main(int argc, char* argv[]) {
         if (game.current_player == P2 && game.game_state == STATE_ING) {
             SDL_Delay(500); // 稍微停頓增加真實感
             ActionPos position = AI_randomFlip(&game);
+
             if (position.inst == 0 && position.success) {
                 IO_executeFlip(&game, position.pos1.row, position.pos1.col);
                 RULE_checkFirstMove(&game, position.pos1.row, position.pos1.col, P2);
                 printf("[AI] flipped: (%d, %d)\n", position.pos1.row, position.pos1.col);
+
+                // ==[RAY 加入]== 紀錄步數
+                UI_recordMove(P2);
+
                 turnEnded = true;
-            } else {
-                // 如果 AI 無牌可翻，暫時跳過（未來應加入 AI 移動邏輯）
-                turnEnded = true; 
+            }
+            else if(position.inst == 1 && position.success){
+                IO_executeMove(&game, position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
+                printf("[AI] moved: (%d, %d) to (%d, %d)\n", position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
+
+                // ==[RAY 加入]== 紀錄步數
+                UI_recordMove(P2);
+
+                turnEnded = true;
+            }
+            else {
+                printf("[AI] error\n");
+                turnEnded = true;
             }
         }
 
@@ -106,12 +159,15 @@ int main(int argc, char* argv[]) {
         // --- 4. 渲染 (Rendering) ---
         SDL_SetRenderDrawColor(renderer, 200, 160, 100, 255);
         SDL_RenderClear(renderer);
-        
+
         UI_drawBoard(renderer, &game, chessTextures);
         UI_drawSelection(renderer, selR, selC); // 畫框
 
         SDL_RenderPresent(renderer);
     }
+
+    // ==[RAY]== 清理擴充圖片記憶體
+    UI_cleanupMenuAssets();
 
     // release MEM.
     for (int i = 0; i < 15; i++) {
