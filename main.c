@@ -88,8 +88,14 @@ int main(int argc, char* argv[]) {
                 RULE_checkFirstMove(&game, position.pos1.row, position.pos1.col, P2);
                 printf("[AI] flipped: (%d, %d)\n", position.pos1.row, position.pos1.col);
                 turnEnded = true;
-            } else {
-                // 如果 AI 無牌可翻，暫時跳過（未來應加入 AI 移動邏輯）
+            }
+            else if(position.inst == 1 && position.success){
+                IO_executeMove(&game, position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
+                printf("[AI] moved: (%d, %d) to (%d, %d)\n", position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
+                turnEnded = true;
+            }
+            else {
+                printf("[AI] error\n");
                 turnEnded = true; 
             }
         }
