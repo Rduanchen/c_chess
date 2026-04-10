@@ -1,0 +1,18 @@
+# Build artifacts
+/bin/
+*.out
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+
+# Windows binaries
+*.exe
+*.dll
+
+# Third-party runtime binaries (local only)
+/vendor/dll/
+
+# IDE/system noise
+.DS_Store
