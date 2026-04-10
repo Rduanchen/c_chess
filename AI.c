@@ -5,7 +5,7 @@
 #include <time.h>
 
 ActionPos AI_randomFlip(gameState *game) {
-    ActionPos decision = {-1, -1, 0};
+    ActionPos decision = {0, {-1, -1}, {-1, -1}, 0};
     int coveredCoords[32][2];
     int count = 0;
 
@@ -21,8 +21,8 @@ ActionPos AI_randomFlip(gameState *game) {
 
     if (count > 0) {
         int idx = rand() % count;
-        decision.row = coveredCoords[idx][0];
-        decision.col = coveredCoords[idx][1];
+        decision.pos1.row = coveredCoords[idx][0];
+        decision.pos1.col = coveredCoords[idx][1];
         decision.success = 1;
     }
     return decision;

@@ -37,116 +37,78 @@ int main(int argc, char* argv[]) {
     static int selC = -1;
 
     while (!quit) {
-        if(game.current_player == P1 && game.game_state == STATE_ING){
-            while (SDL_PollEvent(&e) != 0) {
-                if (e.type == SDL_QUIT) quit = true;
+        bool turnEnded = false; // 用來標記本回合動作是否完成
 
-                // checking game state
-                game.game_state = RULE_checkGameOver(&game);
+        // --- 1. 事件處理 (Poll Event) ---
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) quit = true;
 
-                if (game.game_state != STATE_ING) {
-                    printf("state code: %d\n", game.game_state);
-                    if (game.game_state == STATE_P1_WIN) printf("--- GAME OVER: PLAYER 1 WINS! ---\n");
-                    else if (game.game_state == STATE_P2_WIN) printf("--- GAME OVER: PLAYER 2 WINS! ---\n");
-                    SDL_Delay(10000);
-                    quit = 1;
-                }
+            // 人類玩家回合邏輯
+            if (game.current_player == P1 && game.game_state == STATE_ING && e.type == SDL_MOUSEBUTTONDOWN) {
+                if (e.button.x >= OFFSET_X && e.button.y >= OFFSET_Y) {
+                    int col = (e.button.x - OFFSET_X) / GRID_SIZE;
+                    int row = (e.button.y - OFFSET_Y) / GRID_SIZE;
 
-                // game running
-                if (e.type == SDL_MOUSEBUTTONDOWN) {
-                    if(e.button.x >= OFFSET_X && e.button.y >= OFFSET_Y){
-                        int col = (e.button.x - OFFSET_X) / GRID_SIZE;
-                        int row = (e.button.y - OFFSET_Y) / GRID_SIZE;
-
-                        printf("[Player] touch detected at: (%d, %d)\n", row, col);
-                        if(row < 0 || row > 3 || col < 0 || col > 7){
-                            printf("[System] player touch unaccessible\n");
-                        }
-
-                        // flipping
-                        if(IO_executeFlip(&game, row, col)){
-                            selR = -1, selC = -1;
-                            // check if the first move, and get player's color
+                    if (row >= 0 && row <= 3 && col >= 0 && col <= 7) {
+                        // A. 翻牌動作
+                        if (IO_executeFlip(&game, row, col)) {
                             RULE_checkFirstMove(&game, row, col, P1);
-                            
-                            game.current_player = (game.current_player + 1)% 2;
-                        }
-                        // selecting, eating
-                        else if(game.grid[row][col].status == CHESS_OPEN){
-                            // check if player selected a legal position
-                            if(selR == -1){
-                                // check if player selected his oun color
-                                if(game.grid[row][col].color == game.player_color[game.current_player]){
-                                    selR = row;
-                                    selC = col;
-                                    printf("[Player] select at: (%d, %d)\n", selR, selC);
-                                }else{
-                                    printf("[Player] you can't select opposite color\n");
+                            selR = -1; selC = -1; 
+                            turnEnded = true;
+                        } 
+                        // B. 選取或移動/吃牌動作
+                        else {
+                            if (selR == -1) { // 尚未選取，嘗試選取
+                                if (game.grid[row][col].status == CHESS_OPEN && 
+                                    game.grid[row][col].color == game.player_color[P1]) {
+                                    selR = row; selC = col;
+                                    printf("[Player] selected: (%d, %d)\n", selR, selC);
                                 }
-                            }
-                            // selected legal position
-                            // the second select is what to move or eat
-                            else{
-                                printf("[System] player 1 trying to move (%d, %d) to eat (%d, %d)\n", selR, selC, row, col);
-                                if(RULE_isValidMove(&game, selR, selC, row, col)){
+                            } else { // 已選取，嘗試移動或吃牌
+                                if (RULE_isValidMove(&game, selR, selC, row, col)) {
                                     IO_executeMove(&game, selR, selC, row, col);
-                                    // next player
-                                    game.current_player = (game.current_player + 1)% 2;
-                                }else{
-                                    printf("[System] execution error\n");
-                                    selR = -1, selC = -1;
+                                    turnEnded = true;
                                 }
-
-                                // set to origin
-                                selR = -1, selC = -1;
-
-                                
+                                selR = -1; selC = -1; // 只要進行第二次點擊，不論成功與否都重置
                             }
                         }
-                        // moveing
-                        else if(game.grid[row][col].status == CHESS_EMPTY && selR != -1){
-                            printf("[System] player 1 trying to move (%d, %d) to (%d, %d)\n", selR, selC, row, col);
-                            if(RULE_isValidMove(&game, selR, selC, row, col)){
-                                IO_executeMove(&game, selR, selC, row, col);
-                            }
-
-                            // set to origin
-                            selR = -1, selC = -1;
-
-                            // next player
-                            game.current_player = (game.current_player + 1)% 2;
-                        }
-                    }else{
-                        selR = -1, selC = -1;
-                        printf("[System] player touch unaccessible\n");
                     }
+                } else { // 點擊棋盤外
+                    selR = -1; selC = -1;
                 }
             }
         }
-        else if(game.current_player == P2 && game.game_state == STATE_ING){
-            SDL_Delay(200);
 
-            // get the position where AI want to flip
+        // --- 2. AI 回合處理 ---
+        if (game.current_player == P2 && game.game_state == STATE_ING) {
+            SDL_Delay(500); // 稍微停頓增加真實感
             ActionPos position = AI_randomFlip(&game);
-
-            // write the data
-            if(position.success == 1){
-                IO_executeFlip(&game, position.row, position.col);
-                printf("[AI] touch detected at: (%d, %d)\n", position.row, position.col);
-                RULE_checkFirstMove(&game, position.row, position.col, P2);
-            }else{
-                printf("[AI] flip unsuccessfully\n");
+            if (position.inst == 0 && position.success) {
+                IO_executeFlip(&game, position.pos1.row, position.pos1.col);
+                RULE_checkFirstMove(&game, position.pos1.row, position.pos1.col, P2);
+                printf("[AI] flipped: (%d, %d)\n", position.pos1.row, position.pos1.col);
+                turnEnded = true;
+            } else {
+                // 如果 AI 無牌可翻，暫時跳過（未來應加入 AI 移動邏輯）
+                turnEnded = true; 
             }
-
-            game.current_player = (game.current_player + 1)% 2;
         }
 
+        // --- 3. 狀態更新 (裁判判定) ---
+        if (turnEnded) {
+            game.game_state = RULE_checkGameOver(&game);
+            if (game.game_state != STATE_ING) {
+                printf("--- GAME OVER! Result Code: %d ---\n", game.game_state);
+            }
+            game.current_player = (game.current_player + 1) % 2; // 正確切換回合
+        }
+
+        // --- 4. 渲染 (Rendering) ---
         SDL_SetRenderDrawColor(renderer, 200, 160, 100, 255);
         SDL_RenderClear(renderer);
         
-        UI_drawBoard(renderer, &game, chessTextures); // 使用 UI_ 前綴函式
-
-        UI_drawSelection(renderer, selR, selC);
+        UI_drawBoard(renderer, &game, chessTextures);
+        UI_drawSelection(renderer, selR, selC); // 畫框
 
         SDL_RenderPresent(renderer);
     }

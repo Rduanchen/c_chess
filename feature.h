@@ -15,6 +15,12 @@
 typedef struct {
     int row;
     int col;
+} position;
+
+typedef struct {
+    int inst; // 0 for flipping, 1 for moving(eating)
+    position pos1; // {row, col}
+    position pos2; // {row, col}
     int success; // 是否找到可翻的牌
 } ActionPos;
 
