@@ -4,7 +4,7 @@
 
 This repository is a C + SDL2 implementation of Chinese Dark Chess (Banqi) with:
 
-- Human vs AI (current AI behavior: random flip)
+- Human vs AI (Minimax 3-Ply AI with Alpha-Beta Pruning)
 - 4x8 board state management
 - Rule validation and game-over detection
 - SDL2 rendering and mouse input
@@ -19,7 +19,7 @@ When making changes, prioritize gameplay correctness and keep UI behavior stable
   - `board.c`: board and game state initialization
   - `rule.c`: move/capture validity and game-over checks
   - `IO.c`: board mutations (flip/move/capture)
-  - `AI.c`: AI move decision (currently random flip)
+  - `AI.c`: Minimax AI search engine, move generation, and heuristic board evaluation (Alpha-Beta Pruning)
   - `user_interface.c`: SDL asset loading, board rendering, menu/pause logic (RAY)
 - `include/`: project headers
   - `consensus.h`: shared structs, enums, global conventions
@@ -96,14 +96,22 @@ Run:
 - Turn alternates with `current_player = (current_player + 1) % 2` only after turn action ends.
 - Capture counter updates must stay consistent with board mutations (`red_left`, `black_left`).
 
-## 6) Current Known Limitations
+## 6) AI Architecture (AI.c)
 
-- AI currently only performs random flip and does not perform strategic move/capture.
+- **Entry Point**: `AI_getBestAction(gameState *game)` provides the `ActionPos` instruction for the main loop, handling both flip and move mechanics.
+- **Algorithm**: The AI uses a 3-Ply Minimax search combined with Alpha-Beta pruning, operating on a cloned `gameState` to trace sub-branches natively without modifying actual game state.
+- **Evaluation (`AI_evaluateBoard`)**: Uses absolute weights based on piece rank (e.g., King=100 for Red, King=-100 for Black). Moving subtracts step cost (-1 for Red, +1 for Black) to encourage fast wins.
+- **Flip Estimation (`AI_evaluateFlip`)**: Flips are treated as terminal expectations inside the search tree to optimize calculations. The expected score is derived dynamically by averaging remaining unrevealed `CHESS_COVER` pieces.
+- **Constraint Handling**: In the opening sequence (if `AI_color` is `COLOR_NONE`), the AI is programmatically forced to initiate a random flip.
+
+## 7) Current Known Limitations
+
+- AI calculation limits depth (Ply=3) preventing massive probability trees; some deeper sacrifices may not be recognized.
 - Tie logic is not fully implemented in `RULE_checkGameOver`.
 - RAY's menu/pause extension (`UI_loadMenuAssets`, `UI_cleanupMenuAssets`, `UI_isInMenu`, `UI_isPaused`, `UI_handleMenuEvent`, `UI_recordMove`, `UI_drawStartMenu`, `UI_drawPauseScreen`) is declared in `feature.h` and called in `main.c`, but the implementation resides in `user_interface.c`. Ensure all declared functions always have a corresponding implementation or linker errors will occur.
 - Some comments contain mixed language and typos; prioritize behavior correctness over comment cleanup.
 
-## 7) Preferred Change Strategy for Future AI
+## 8) Preferred Change Strategy for Future AI
 
 When implementing features or fixes:
 
@@ -113,13 +121,13 @@ When implementing features or fixes:
 4. Rebuild with the Windows command above from the project root.
 5. Avoid broad refactors unless explicitly requested.
 
-## 8) Git and Artifact Policy
+## 9) Git and Artifact Policy
 
 - Do not commit compiled binaries or runtime DLLs.
 - `.gitignore` excludes `*.exe` and should also exclude `*.dll` artifacts if added.
 - `vendor/include/` and `vendor/lib/` **should be committed** — they are the vendored SDL2 dev files that replace the need for system-wide installation.
 
-## 9) If SDL headers cannot be found
+## 10) If SDL headers cannot be found
 
 Check in this order:
 
