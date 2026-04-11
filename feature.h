@@ -12,6 +12,8 @@
 // 0 is for ramdom start, 1 is for human start, 2 is for AI start
 #define START_MODE 0
 
+#include <stdbool.h>
+
 typedef struct {
     int row;
     int col;
@@ -60,4 +62,13 @@ int RULE_isValidMove(gameState *game, int r1, int c1, int r2, int c2);
 
 int RULE_checkGameOver(gameState *game);
 
+// ==[RAY 擴充功能]==
+void UI_loadMenuAssets(SDL_Renderer* renderer);
+void UI_cleanupMenuAssets();
+bool UI_isInMenu();
+bool UI_isPaused();
+void UI_handleMenuEvent(SDL_Event* event, gameState* game);
+void UI_recordMove(int current_player);
+void UI_drawStartMenu(SDL_Renderer* renderer);
+void UI_drawPauseScreen(SDL_Renderer* renderer);
 #endif
