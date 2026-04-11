@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
         // --- 2. AI 回合處理 ---
         if (game.current_player == P2 && game.game_state == STATE_ING) {
             SDL_Delay(500); // 稍微停頓增加真實感
-            ActionPos position = AI_randomFlip(&game);
+            ActionPos position = AI_getBestAction(&game);
 
             if (position.inst == 0 && position.success) {
                 IO_executeFlip(&game, position.pos1.row, position.pos1.col);
