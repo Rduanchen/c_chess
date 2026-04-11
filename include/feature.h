@@ -43,8 +43,8 @@ void UI_drawBoard(SDL_Renderer* renderer, gameState *game, SDL_Texture* textures
 void UI_drawSelection(SDL_Renderer* renderer, int selR, int selC);
 
 // AI.c
-// 電腦回合：自動翻牌
-ActionPos AI_randomFlip(gameState *game);
+// 電腦回合：自動翻牌/移動
+ActionPos AI_getBestAction(gameState *game);
 
 
 // IO.c

@@ -1,24 +1,55 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "macOS",
             "includePath": [
-                "${workspaceFolder}/**",
-                "C:/msys64/ucrt64/include"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/assets",
+                "/opt/homebrew/include",
+                "/opt/homebrew/include/SDL2",
+                "/usr/local/include",
+                "/usr/local/include/SDL2"
+            ],
+            "defines": [
+                "_DEBUG"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-arm64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/include",
+                    "/opt/homebrew/include",
+                    "/opt/homebrew/include/SDL2",
+                    "/usr/local/include",
+                    "/usr/local/include/SDL2"
+                ]
+            }
+        },
+        {
+            "name": "Win32-MSYS2",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src",
+                "C:/msys64/ucrt64/include",
+                "C:/msys64/ucrt64/include/SDL2"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE"
             ],
-            "windowsSdkVersion": "10.0.22000.0",
-            "compilerPath": "cl.exe",
+            "compilerPath": "C:/msys64/ucrt64/bin/gcc.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64",
+            "intelliSenseMode": "windows-gcc-x64",
             "browse": {
                 "path": [
-                    "C:/msys64/ucrt64/include"
+                    "${workspaceFolder}/include",
+                    "C:/msys64/ucrt64/include",
+                    "C:/msys64/ucrt64/include/SDL2"
                 ]
             }
         }

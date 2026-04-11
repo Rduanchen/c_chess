@@ -10,6 +10,10 @@ static bool in_start_menu = true;
 static bool is_paused = false;
 static int p1_steps = 0;
 static int p2_steps = 0;
+// 最大步數
+
+static const int MAX_STEPS = 20;
+
 // 新增：從 assets 匯入圖檔
 void UI_loadAssets(SDL_Renderer* renderer, SDL_Texture* textures[]) {
     // 0 是蓋牌
@@ -136,8 +140,8 @@ void UI_recordMove(int current_player) {
 
     printf("TotalStep -> P1: %d steps | P2: %d steps\n", p1_steps, p2_steps);
 
-    // 滿 10 步觸發暫停
-    if (p1_steps >= 10 && p2_steps >= 10) {
+    // 滿 MAX_STEPS 步觸發暫停
+    if (p1_steps >= MAX_STEPS && p2_steps >= MAX_STEPS) {
         is_paused = true;
     }
 }

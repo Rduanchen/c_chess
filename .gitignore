@@ -22,3 +22,6 @@ Makefile
 
 # Debug symbols
 *.pdb
+
+C_Chess.exe
+c_chess

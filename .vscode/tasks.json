@@ -1,0 +1,59 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (macOS)",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lc",
+        "mkdir -p bin && clang src/*.c -o bin/C_Chess -I./include $(pkg-config --cflags --libs sdl2 SDL2_image)"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "label": "Run (macOS)",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "args": [
+        "-lc",
+        "./bin/C_Chess"
+      ],
+      "dependsOn": "Build (macOS)"
+    },
+    {
+      "label": "Build (Windows MSYS2)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$env:Path += ';C:/msys64/ucrt64/bin'; if (!(Test-Path bin)) { New-Item -ItemType Directory -Path bin | Out-Null }; gcc src/*.c -o bin/C_Chess.exe -I./include -I'C:/msys64/ucrt64/include' -lmingw32 -lSDL2main -lSDL2 -lSDL2_image"
+      ],
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "label": "Run (Windows)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "./bin/C_Chess.exe"
+      ],
+      "dependsOn": "Build (Windows MSYS2)"
+    }
+  ]
+}
