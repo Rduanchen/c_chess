@@ -1,5 +1,5 @@
-#include "consensus.h"
-#include "feature.h"
+#include "../include/consensus.h"
+#include "../include/feature.h"
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>

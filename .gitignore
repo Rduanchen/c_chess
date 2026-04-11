@@ -1,18 +1,24 @@
-# Build artifacts
-/bin/
-*.out
+# Executables
+*.exe
+
+# Build directories
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# IDE
+.idea/
+.vscode/
+
+# Object files
 *.o
 *.obj
-*.a
-*.so
-*.dylib
 
-# Windows binaries
-*.exe
-*.dll
-
-# Third-party runtime binaries (local only)
-/vendor/dll/
-
-# IDE/system noise
-.DS_Store
+# Debug symbols
+*.pdb

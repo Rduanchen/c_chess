@@ -1,5 +1,5 @@
-#include "consensus.h"
-#include "feature.h"
+#include "../include/consensus.h"
+#include "../include/feature.h"
 #include <stdio.h>
 
 int IO_executeFlip(gameState *game, int row, int col) {

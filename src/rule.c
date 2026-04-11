@@ -1,4 +1,4 @@
-#include "consensus.h"
+#include "../include/consensus.h"
 #include <stdio.h>
 #include <stdlib.h>
 
