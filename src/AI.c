@@ -103,17 +103,22 @@ int AI_evaluateFlip(gameState* game)
         return 0;
 
     int expected_sum = 0;
+    int total_unaccounted = 0; // 蓋住 + 被吃掉的棋子總數
 
     for (int color = COLOR_RED; color <= COLOR_BLK; color++) {
         for (int type = TYPE_PAWN; type <= TYPE_KING; type++) {
             int count = initial_counts[color - COLOR_RED][type];
             if (count > 0) {
                 expected_sum += count * get_piece_weight(color, type);
+                total_unaccounted += count;
             }
         }
     }
 
-    return expected_sum / total_hidden;
+    if (total_unaccounted == 0)
+        return 0;
+
+    return expected_sum / total_unaccounted;
 }
 
 // --- 4.1 合法移動生成 ---
