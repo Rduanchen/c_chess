@@ -274,7 +274,7 @@ ActionPos AI_getBestAction(gameState *game) {
     int bestVal = isMaximizing ? -INF : INF;
     int bestMoveIdx = 0;
 
-    int depth = 6; // 搜尋深度
+    int depth = 7; // 搜尋深度
 
     for (int i = 0; i < moveCount; i++) {
         gameState nextState = *game;

@@ -15,9 +15,9 @@ void RULE_checkFirstMove(gameState *game, int row, int col, int whoFlipped) {
         game->player_color[(whoFlipped + 1) % 2] = (flippedColor == COLOR_RED) ? COLOR_BLK : COLOR_RED;
         
         printf("[Rule] P%d is %s, P%d is %s\n", 
-                (whoFlipped + 1),
+                (whoFlipped == 0 ? 1 : 2),
                 (flippedColor == COLOR_RED ? "RED" : "BLACK"),
-                (whoFlipped + 2) % 2,
+                (whoFlipped == 0 ? 2 : 1),
                 (flippedColor == COLOR_RED ? "BLACK" : "RED"));
     }
 }

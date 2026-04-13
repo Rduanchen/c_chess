@@ -10,7 +10,7 @@
 #define OFFSET_Y 60
 
 // 0 is for ramdom start, 1 is for player1 start, 2 is for player2 start
-#define START_MODE 2
+#define START_MODE 0
 
 #include <stdbool.h>
 
