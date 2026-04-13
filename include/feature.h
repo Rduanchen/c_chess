@@ -9,8 +9,8 @@
 #define OFFSET_X 80
 #define OFFSET_Y 60
 
-// 0 is for ramdom start, 1 is for human start, 2 is for AI start
-#define START_MODE 0
+// 0 is for ramdom start, 1 is for player1 start, 2 is for player2 start
+#define START_MODE 2
 
 #include <stdbool.h>
 
@@ -46,6 +46,8 @@ void UI_drawSelection(SDL_Renderer* renderer, int selR, int selC);
 // 電腦回合：自動翻牌/移動
 ActionPos AI_getBestAction(gameState *game);
 
+// AI2.c
+ActionPos AI_getBestAction2(gameState *game);
 
 // IO.c
 // IO interface

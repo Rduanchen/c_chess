@@ -6,7 +6,7 @@ int IO_executeFlip(gameState *game, int row, int col) {
     if (row >= 0 && row < 4 && col >= 0 && col < 8) {
         if (game->grid[row][col].status == CHESS_COVER) {
             game->grid[row][col].status = CHESS_OPEN;
-            printf("[Action] flip at: (%d, %d)\n", row, col);
+            //printf("[Action] flip at: (%d, %d)\n", row, col);
             return 1;
             // flip successfully
         }
@@ -40,5 +40,5 @@ void IO_executeMove(gameState *game, int r1, int c1, int r2, int c2){
     src->color = COLOR_NONE;
     src->status = CHESS_EMPTY;
 
-    printf("[Action] Move: (%d, %d) -> (%d, %d)\n", r1, c1, r2, c2);
+    //printf("[Action] Move: (%d, %d) -> (%d, %d)\n", r1, c1, r2, c2);
 }

@@ -40,82 +40,49 @@ int main(int argc, char* argv[]) {
     static int selC = -1;
 
     while (!quit) {
-        // ==[RAY 加入]== 1. 選單畫面攔截
-        if (UI_isInMenu()) {
-            while (SDL_PollEvent(&e) != 0) {
-                if (e.type == SDL_QUIT) quit = true;
-                UI_handleMenuEvent(&e, &game);
-            }
-            SDL_SetRenderDrawColor(renderer, 200, 160, 100, 255);
-            SDL_RenderClear(renderer);
-            UI_drawStartMenu(renderer);
-            SDL_RenderPresent(renderer);
-            continue; // 卡在選單，不執行後面的遊戲邏輯
-        }
-
-        // ==[RAY 加入]== 2. 暫停畫面攔截
-        if (UI_isPaused()) {
-            while (SDL_PollEvent(&e) != 0) {
-                if (e.type == SDL_QUIT) quit = true;
-            }
-            SDL_SetRenderDrawColor(renderer, 200, 160, 100, 255);
-            SDL_RenderClear(renderer);
-            UI_drawBoard(renderer, &game, chessTextures);
-            UI_drawSelection(renderer, selR, selC);
-            UI_drawPauseScreen(renderer); // 疊加畫上暫停圖示
-            SDL_RenderPresent(renderer);
-            continue; // 卡在暫停，不執行後面的遊戲邏輯
-        }
 
         bool turnEnded = false; // 用來標記本回合動作是否完成
 
         // --- 1. 事件處理 (Poll Event) ---
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) quit = true;
+        }
 
-            // 人類玩家回合邏輯
-            if (game.current_player == P1 && game.game_state == STATE_ING && e.type == SDL_MOUSEBUTTONDOWN) {
-                if (e.button.x >= OFFSET_X && e.button.y >= OFFSET_Y) {
-                    int col = (e.button.x - OFFSET_X) / GRID_SIZE;
-                    int row = (e.button.y - OFFSET_Y) / GRID_SIZE;
+        // --- player1: Gemini ---
+        if (game.current_player == P1 && game.game_state == STATE_ING) {
+            SDL_Delay(500); // 稍微停頓增加真實感
+            ActionPos position2 = AI_getBestAction2(&game);
 
-                    if (row >= 0 && row <= 3 && col >= 0 && col <= 7) {
-                        // A. 翻牌動作
-                        if (IO_executeFlip(&game, row, col)) {
-                            RULE_checkFirstMove(&game, row, col, P1);
-                            selR = -1; selC = -1;
+            if (position2.inst == 0 && position2.success) {
+                IO_executeFlip(&game, position2.pos1.row, position2.pos1.col);
+                RULE_checkFirstMove(&game, position2.pos1.row, position2.pos1.col, P1);
+                printf("[gemini] flipped: (%d, %d)\n", position2.pos1.row, position2.pos1.col);
 
-                            // ==[RAY 加入]== 紀錄步數
-                            UI_recordMove(P1);
+                // ==[RAY 加入]== 紀錄步數
+                UI_recordMove(P1);
 
-                            turnEnded = true;
-                        }
-                        // B. 選取或移動/吃牌動作
-                        else {
-                            if (selR == -1) { // 尚未選取，嘗試選取
-                                if (game.grid[row][col].status == CHESS_OPEN &&
-                                    game.grid[row][col].color == game.player_color[P1]) {
-                                    selR = row; selC = col;
-                                    printf("[Player] selected: (%d, %d)\n", selR, selC);
-                                }
-                            } else { // 已選取，嘗試移動或吃牌
-                                if (RULE_isValidMove(&game, selR, selC, row, col)) {
-                                    IO_executeMove(&game, selR, selC, row, col);
+                turnEnded = true;
+            }
+            else if(position2.inst == 1 && position2.success){
+                if(!RULE_isValidMove(&game, position2.pos1.row, position2.pos1.col, position2.pos2.row, position2.pos2.col)){
+                    printf("[System] Gemini's movement is not valid\n");
+                }
+                else{
+                    IO_executeMove(&game, position2.pos1.row, position2.pos1.col, position2.pos2.row, position2.pos2.col);
+                    printf("[gemini] moved: (%d, %d) to (%d, %d)\n", position2.pos1.row, position2.pos1.col, position2.pos2.row, position2.pos2.col);
 
-                                    // ==[RAY 加入]== 紀錄步數
-                                    UI_recordMove(P1);
+                    // ==[RAY 加入]== 紀錄步數
+                    UI_recordMove(P1);
 
-                                    turnEnded = true;
-                                }
-                                selR = -1; selC = -1; // 只要進行第二次點擊，不論成功與否都重置
-                            }
-                        }
-                    }
-                } else { // 點擊棋盤外
-                    selR = -1; selC = -1;
+                    turnEnded = true;
                 }
             }
+            else {
+                printf("[gemini] error\n");
+                turnEnded = true;
+            }
         }
+
 
         // --- 2. AI 回合處理 ---
         if (game.current_player == P2 && game.game_state == STATE_ING) {
@@ -133,13 +100,18 @@ int main(int argc, char* argv[]) {
                 turnEnded = true;
             }
             else if(position.inst == 1 && position.success){
-                IO_executeMove(&game, position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
-                printf("[AI] moved: (%d, %d) to (%d, %d)\n", position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
+                if(!RULE_isValidMove(&game, position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col)){
+                    printf("[System] Origin AI's movement is not valid\n");
+                }
+                else{
+                    IO_executeMove(&game, position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
+                    printf("[AI] moved: (%d, %d) to (%d, %d)\n", position.pos1.row, position.pos1.col, position.pos2.row, position.pos2.col);
 
-                // ==[RAY 加入]== 紀錄步數
-                UI_recordMove(P2);
+                    // ==[RAY 加入]== 紀錄步數
+                    UI_recordMove(P2);
 
-                turnEnded = true;
+                    turnEnded = true;
+                }
             }
             else {
                 printf("[AI] error\n");
