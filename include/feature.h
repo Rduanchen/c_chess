@@ -14,6 +14,12 @@
 
 #include <stdbool.h>
 
+// ====== 遊戲模式 ======
+enum game_mode {
+    GAME_MODE_LOCAL,    // 本機對戰 (人 vs AI)
+    GAME_MODE_ONLINE    // 連線對戰
+};
+
 typedef struct {
     int row;
     int col;
@@ -29,6 +35,9 @@ typedef struct {
 // board.c
 // __init
 void BD_initGame(gameState *game);
+
+// 線上模式棋盤初始化 (不隨機放棋子，等伺服器同步)
+void BD_initOnlineGame(gameState *game);
 
 
 // user_interface.c
@@ -71,4 +80,10 @@ void UI_handleMenuEvent(SDL_Event* event, gameState* game);
 void UI_recordMove(int current_player);
 void UI_drawStartMenu(SDL_Renderer* renderer);
 void UI_drawPauseScreen(SDL_Renderer* renderer);
+
+// ==[線上對戰 UI]==
+int UI_getGameMode();           // 回傳當前遊戲模式
+bool UI_isOnlineConnecting();   // 是否正在連線設定中
+void UI_drawOnlineStatus(SDL_Renderer* renderer, const char* status_text);
+
 #endif

@@ -68,3 +68,21 @@ void BD_initGame(gameState *game){
 
 
 }
+
+// 線上模式初始化：不分配棋子，等伺服器同步
+void BD_initOnlineGame(gameState *game) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 8; j++) {
+            game->grid[i][j].status = CHESS_COVER;
+            game->grid[i][j].type = TYPE_EMPTY;
+            game->grid[i][j].color = COLOR_NONE;
+        }
+    }
+
+    game->current_player = P1; // 由伺服器決定
+    game->player_color[0] = COLOR_NONE;
+    game->player_color[1] = COLOR_NONE;
+    game->red_left = 16;
+    game->black_left = 16;
+    game->game_state = STATE_ING;
+}

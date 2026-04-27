@@ -35,13 +35,13 @@ enum color_state {
 
 enum type_state {
 	TYPE_EMPTY = 0,
-	TYPE_PAWN = 1,     // ¨ò / §L
-    TYPE_CANNON = 2,   // ¥] / ¬¶
-    TYPE_HORSE = 3,    // °¨ / ØX
-    TYPE_CHARIOT = 4,  // ¨® / ¨® 
-    TYPE_MINISTER = 5, // ¶H / ¬Û
-    TYPE_GUARD = 6,    // ¤h / ¥K
-    TYPE_KING = 7      // ±N / «Ó 
+	TYPE_PAWN = 1,     // ï¿½ï¿½ / ï¿½L
+    TYPE_CANNON = 2,   // ï¿½] / ï¿½ï¿½
+    TYPE_HORSE = 3,    // ï¿½ï¿½ / ï¿½X
+    TYPE_CHARIOT = 4,  // ï¿½ï¿½ / ï¿½ï¿½ 
+    TYPE_MINISTER = 5, // ï¿½H / ï¿½ï¿½
+    TYPE_GUARD = 6,    // ï¿½h / ï¿½K
+    TYPE_KING = 7      // ï¿½N / ï¿½ï¿½ 
 };
 
 enum game_state {

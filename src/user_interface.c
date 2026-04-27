@@ -14,6 +14,10 @@ static int p2_steps = 0;
 
 static const int MAX_STEPS = 40;
 
+// ==[線上對戰狀態]==
+static int selected_game_mode = -1;       // -1 = 尚未選擇, 0 = LOCAL, 1 = ONLINE
+static bool online_connecting = false;    // 正在進行連線設定中
+
 // 新增：從 assets 匯入圖檔
 void UI_loadAssets(SDL_Renderer* renderer, SDL_Texture* textures[])
 {
@@ -135,12 +139,29 @@ bool UI_isPaused() { return is_paused; }
 void UI_handleMenuEvent(SDL_Event* event, gameState* game)
 {
     if (event->type == SDL_MOUSEBUTTONDOWN) {
-        if (event->button.x < 400) {
+        int x = event->button.x;
+        int win_w = 800;
+        int third = win_w / 3; // ~266
+
+        if (x < third) {
+            // 左邊 1/3：先手 (本機對戰)
+            selected_game_mode = GAME_MODE_LOCAL;
             game->current_player = P1;
+            in_start_menu = false;
+            printf("[UI] Selected: Local game, Player first\n");
+        } else if (x < third * 2) {
+            // 中間 1/3：連線對戰
+            selected_game_mode = GAME_MODE_ONLINE;
+            online_connecting = true;
+            in_start_menu = false;
+            printf("[UI] Selected: Online battle mode\n");
         } else {
+            // 右邊 1/3：後手 (本機對戰)
+            selected_game_mode = GAME_MODE_LOCAL;
             game->current_player = P2;
+            in_start_menu = false;
+            printf("[UI] Selected: Local game, AI first\n");
         }
-        in_start_menu = false;
     }
 }
 
@@ -165,12 +186,25 @@ void UI_drawStartMenu(SDL_Renderer* renderer)
         SDL_Rect dest = { 0, 0, 800, 450 };
         SDL_RenderCopy(renderer, menuTexture, NULL, &dest);
     } else {
-        SDL_Rect left_half = { 0, 0, 400, 450 };
+        // 三分區 fallback：左=先手、中=連線對戰、右=後手
+        int third = 800 / 3;
+
+        SDL_Rect left_area = { 0, 0, third, 450 };
         SDL_SetRenderDrawColor(renderer, 100, 200, 100, 255);
-        SDL_RenderFillRect(renderer, &left_half);
-        SDL_Rect right_half = { 400, 0, 400, 450 };
+        SDL_RenderFillRect(renderer, &left_area);
+
+        SDL_Rect mid_area = { third, 0, third, 450 };
+        SDL_SetRenderDrawColor(renderer, 200, 180, 100, 255);
+        SDL_RenderFillRect(renderer, &mid_area);
+
+        SDL_Rect right_area = { third * 2, 0, 800 - third * 2, 450 };
         SDL_SetRenderDrawColor(renderer, 100, 150, 255, 255);
-        SDL_RenderFillRect(renderer, &right_half);
+        SDL_RenderFillRect(renderer, &right_area);
+
+        // 分隔線
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawLine(renderer, third, 0, third, 450);
+        SDL_RenderDrawLine(renderer, third * 2, 0, third * 2, 450);
     }
 }
 
@@ -183,5 +217,42 @@ void UI_drawPauseScreen(SDL_Renderer* renderer)
         SDL_Rect pause_box = { 250, 175, 300, 100 };
         SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255);
         SDL_RenderFillRect(renderer, &pause_box);
+    }
+}
+
+// ==[線上對戰 UI 函式]==
+
+int UI_getGameMode() {
+    return selected_game_mode;
+}
+
+bool UI_isOnlineConnecting() {
+    return online_connecting;
+}
+
+void UI_drawOnlineStatus(SDL_Renderer* renderer, const char* status_text) {
+    // 在畫面上方顯示連線狀態的半透明橫條
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    // 背景條
+    SDL_Rect bar = { 0, 0, 800, 30 };
+    SDL_SetRenderDrawColor(renderer, 30, 30, 80, 200);
+    SDL_RenderFillRect(renderer, &bar);
+
+    // 綠色指示燈
+    SDL_Rect indicator = { 10, 8, 14, 14 };
+    SDL_SetRenderDrawColor(renderer, 0, 220, 80, 255);
+    SDL_RenderFillRect(renderer, &indicator);
+
+    // 恢復混合模式
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
+    // 注意：不使用 SDL_ttf 的情況下，我們只在 console 輸出狀態
+    // 若需要在畫面上顯示文字，需要引入 SDL_ttf
+    // 目前僅在 console 顯示
+    static const char* last_status = NULL;
+    if (last_status != status_text) {
+        printf("[Online] %s\n", status_text);
+        last_status = status_text;
     }
 }

@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 :: 1. Set GCC compiler path (Ensure mingw64 is located at C:\mingw64)
 SET "PATH=%PATH%;C:\mingw64\bin"
 
@@ -7,7 +8,7 @@ cd /d "%~dp0"
 
 echo [1/3] Compiling source files...
 :: 3. Execute the compilation command
-gcc src/*.c -o C_Chess -I"include" -I"vendor/include" -L"vendor/lib" -L"vendor" -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
+gcc src/*.c -o C_Chess -I"include" -I"vendor/include" -L"vendor/lib" -L"vendor" -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lws2_32
 
 :: Check if the compilation was successful
 if %ERRORLEVEL% NEQ 0 (
