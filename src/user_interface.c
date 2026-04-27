@@ -17,6 +17,7 @@ static const int MAX_STEPS = 40;
 // ==[線上對戰狀態]==
 static int selected_game_mode = -1;       // -1 = 尚未選擇, 0 = LOCAL, 1 = ONLINE
 static bool online_connecting = false;    // 正在進行連線設定中
+static int selected_ai_version = 1;       // 1 = AI1, 2 = AI2
 
 // 新增：從 assets 匯入圖檔
 void UI_loadAssets(SDL_Renderer* renderer, SDL_Texture* textures[])
@@ -154,7 +155,13 @@ void UI_handleMenuEvent(SDL_Event* event, gameState* game)
             selected_game_mode = GAME_MODE_ONLINE;
             online_connecting = true;
             in_start_menu = false;
-            printf("[UI] Selected: Online battle mode\n");
+            if (event->button.y < 225) {
+                selected_ai_version = 1;
+                printf("[UI] Selected: Online battle mode (Original AI 1)\n");
+            } else {
+                selected_ai_version = 2;
+                printf("[UI] Selected: Online battle mode (Gemini AI 2)\n");
+            }
         } else {
             // 右邊 1/3：後手 (本機對戰)
             selected_game_mode = GAME_MODE_LOCAL;
@@ -180,22 +187,91 @@ void UI_recordMove(int current_player)
     }
 }
 
+// 輔助函式：畫粗線
+static void UI_drawThickLine(SDL_Renderer* r, int x1, int y1, int x2, int y2) {
+    for (int i = -2; i <= 2; i++) {
+        for (int j = -2; j <= 2; j++) {
+            SDL_RenderDrawLine(r, x1+i, y1+j, x2+i, y2+j);
+        }
+    }
+}
+
+// 輔助函式：畫 "AI 1" 或 "AI 2" 的文字幾何圖形
+static void UI_drawAIText(SDL_Renderer* r, int version, int x, int y) {
+    int s = 2; // 放大倍率
+    SDL_SetRenderDrawColor(r, 255, 255, 255, 255); // 白色字
+
+    // 畫 'A' (20x30)
+    UI_drawThickLine(r, x + 0*s, y + 30*s, x + 10*s, y + 0*s);
+    UI_drawThickLine(r, x + 10*s, y + 0*s,  x + 20*s, y + 30*s);
+    UI_drawThickLine(r, x + 5*s,  y + 15*s, x + 15*s, y + 15*s);
+    
+    // 畫 'I' (20x30), 位移 35*s
+    x += 35*s;
+    UI_drawThickLine(r, x + 0*s, y + 0*s, x + 20*s, y + 0*s);
+    UI_drawThickLine(r, x + 10*s,y + 0*s, x + 10*s, y + 30*s);
+    UI_drawThickLine(r, x + 0*s, y + 30*s,x + 20*s, y + 30*s);
+
+    // 畫數字, 位移 35*s
+    x += 35*s;
+    if (version == 1) {
+        // '1'
+        UI_drawThickLine(r, x + 0*s, y + 10*s, x + 10*s, y + 0*s);
+        UI_drawThickLine(r, x + 10*s,y + 0*s,  x + 10*s, y + 30*s);
+        UI_drawThickLine(r, x + 0*s, y + 30*s, x + 20*s, y + 30*s);
+    } else {
+        // '2'
+        UI_drawThickLine(r, x + 0*s, y + 0*s,  x + 20*s, y + 0*s);
+        UI_drawThickLine(r, x + 20*s,y + 0*s,  x + 20*s, y + 15*s);
+        UI_drawThickLine(r, x + 20*s,y + 15*s, x + 0*s,  y + 15*s);
+        UI_drawThickLine(r, x + 0*s, y + 15*s, x + 0*s,  y + 30*s);
+        UI_drawThickLine(r, x + 0*s, y + 30*s, x + 20*s, y + 30*s);
+    }
+}
+
 void UI_drawStartMenu(SDL_Renderer* renderer)
 {
+    int third = 800 / 3;
+
     if (menuTexture) {
         SDL_Rect dest = { 0, 0, 800, 450 };
         SDL_RenderCopy(renderer, menuTexture, NULL, &dest);
+        
+        // 疊加 AI 選擇提示框 (中間區域)
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        
+        // 上半部 AI 1
+        SDL_Rect ai1_box = { third + 20, 50, third - 40, 150 };
+        SDL_SetRenderDrawColor(renderer, 255, 100, 100, 150); // 半透明紅
+        SDL_RenderFillRect(renderer, &ai1_box);
+        
+        // 下半部 AI 2
+        SDL_Rect ai2_box = { third + 20, 250, third - 40, 150 };
+        SDL_SetRenderDrawColor(renderer, 100, 100, 255, 150); // 半透明藍
+        SDL_RenderFillRect(renderer, &ai2_box);
+        
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        
+        // 加上文字圖形
+        UI_drawAIText(renderer, 1, third + 50, 100);
+        UI_drawAIText(renderer, 2, third + 50, 290);
     } else {
         // 三分區 fallback：左=先手、中=連線對戰、右=後手
-        int third = 800 / 3;
-
         SDL_Rect left_area = { 0, 0, third, 450 };
         SDL_SetRenderDrawColor(renderer, 100, 200, 100, 255);
         SDL_RenderFillRect(renderer, &left_area);
 
-        SDL_Rect mid_area = { third, 0, third, 450 };
-        SDL_SetRenderDrawColor(renderer, 200, 180, 100, 255);
-        SDL_RenderFillRect(renderer, &mid_area);
+        SDL_Rect mid_top = { third, 0, third, 225 };
+        SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255); // AI 1
+        SDL_RenderFillRect(renderer, &mid_top);
+
+        SDL_Rect mid_bot = { third, 225, third, 225 };
+        SDL_SetRenderDrawColor(renderer, 100, 100, 255, 255); // AI 2
+        SDL_RenderFillRect(renderer, &mid_bot);
+        
+        // 加上文字圖形
+        UI_drawAIText(renderer, 1, third + 50, 80);
+        UI_drawAIText(renderer, 2, third + 50, 305);
 
         SDL_Rect right_area = { third * 2, 0, 800 - third * 2, 450 };
         SDL_SetRenderDrawColor(renderer, 100, 150, 255, 255);
@@ -205,6 +281,7 @@ void UI_drawStartMenu(SDL_Renderer* renderer)
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderDrawLine(renderer, third, 0, third, 450);
         SDL_RenderDrawLine(renderer, third * 2, 0, third * 2, 450);
+        SDL_RenderDrawLine(renderer, third, 225, third * 2, 225);
     }
 }
 
@@ -224,6 +301,10 @@ void UI_drawPauseScreen(SDL_Renderer* renderer)
 
 int UI_getGameMode() {
     return selected_game_mode;
+}
+
+int UI_getSelectedAIVersion() {
+    return selected_ai_version;
 }
 
 bool UI_isOnlineConnecting() {

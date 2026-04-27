@@ -85,6 +85,7 @@ void UI_drawPauseScreen(SDL_Renderer* renderer);
 
 // ==[線上對戰 UI]==
 int UI_getGameMode();           // 回傳當前遊戲模式
+int UI_getSelectedAIVersion();  // 1 = AI1, 2 = AI2
 bool UI_isOnlineConnecting();   // 是否正在連線設定中
 void UI_drawOnlineStatus(SDL_Renderer* renderer, const char* status_text);
 

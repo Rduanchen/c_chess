@@ -209,8 +209,13 @@ int main(int argc, char* argv[]) {
                         printf("[AI-Online] 輪到我方 (角色 %s, 顏色 %s)，AI 思考中...\n",
                                online.my_role_ab, online.my_color);
 
-                        // 呼叫本地 AI 引擎
-                        ActionPos bestAction = AI_getBestAction(&game);
+                        // 呼叫選定的本地 AI 引擎
+                        ActionPos bestAction;
+                        if (UI_getSelectedAIVersion() == 1) {
+                            bestAction = AI_getBestAction(&game);
+                        } else {
+                            bestAction = AI_getBestAction2(&game);
+                        }
 
                         if (bestAction.inst == 0 && bestAction.success) {
                             // 翻牌動作
