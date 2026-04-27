@@ -12,7 +12,7 @@ static int p1_steps = 0;
 static int p2_steps = 0;
 // 最大步數
 
-static const int MAX_STEPS = 40;
+static const int MAX_STEPS = 50;
 
 // 新增：從 assets 匯入圖檔
 void UI_loadAssets(SDL_Renderer* renderer, SDL_Texture* textures[])
