@@ -406,9 +406,13 @@ int AI_minimax(gameState* game, int depth, int alpha, int beta, int isMaximizing
             int eval;
 
             if (moves[i].inst == 0) {
-                // 翻牌: 全局期望 + 位置獎勵 (Max 方翻牌，bonus 正向)
+                // Max 方翻牌: 模擬回合交給對手 (Null Move)
                 int flip_pos = AI_evaluateFlipPosition(&ns, moves[i].pos1.row, moves[i].pos1.col, ai_color);
-                eval = AI_evaluateBoard(&ns) + AI_evaluateFlipGlobal(&ns) + flip_pos;
+                int flip_bonus = AI_evaluateFlipGlobal(&ns) + flip_pos;
+
+                ns.current_player = (ns.current_player + 1) % 2;
+                // 停止向下深搜，直接使用靜態評估，避免 Null Move 導致的指數級展開
+                eval = AI_evaluateBoard(&ns) + flip_bonus;
             } else {
                 int capture_bonus = 0;
                 int tr = moves[i].pos2.row, tc = moves[i].pos2.col;
@@ -437,9 +441,13 @@ int AI_minimax(gameState* game, int depth, int alpha, int beta, int isMaximizing
             int eval;
 
             if (moves[i].inst == 0) {
-                // 翻牌: Min 方翻牌，位置 bonus 取反
+                // Min 方翻牌: 模擬回合交給對手 (Null Move)
                 int flip_pos = AI_evaluateFlipPosition(&ns, moves[i].pos1.row, moves[i].pos1.col, ai_color);
-                eval = AI_evaluateBoard(&ns) + AI_evaluateFlipGlobal(&ns) - flip_pos;
+                int flip_bonus = AI_evaluateFlipGlobal(&ns) - flip_pos;
+
+                ns.current_player = (ns.current_player + 1) % 2;
+                // 停止向下深搜，直接使用靜態評估
+                eval = AI_evaluateBoard(&ns) + flip_bonus;
             } else {
                 int capture_bonus = 0;
                 int tr = moves[i].pos2.row, tc = moves[i].pos2.col;
@@ -513,10 +521,17 @@ ActionPos AI_getBestAction(gameState* game)
         int eval;
 
         if (moves[i].inst == 0) {
-            // 翻牌: 套用正確方向的位置獎勵
-            int flip_pos = AI_evaluateFlipPosition(&ns, moves[i].pos1.row, moves[i].pos1.col, ai_color);
-            int base = AI_evaluateBoard(&ns) + AI_evaluateFlipGlobal(&ns);
-            eval = base + (isMaximizing ? flip_pos : -flip_pos);
+                // 翻牌: 模擬回合交給對手 (Null Move)
+                int flip_pos = AI_evaluateFlipPosition(&ns, moves[i].pos1.row, moves[i].pos1.col, ai_color);
+                int flip_bonus = AI_evaluateFlipGlobal(&ns) + (isMaximizing ? flip_pos : -flip_pos);
+                
+                ns.current_player = (ns.current_player + 1) % 2;
+                // 第一層的翻牌給予 depth=1 的搜尋，確保 AI 能看見對手的下一步反擊，且不會超時
+                if (isMaximizing) {
+                    eval = AI_minimax(&ns, 1, -INF, INF, 0) + flip_bonus;
+                } else {
+                    eval = AI_minimax(&ns, 1, -INF, INF, 1) + flip_bonus;
+                }
         } else {
             // 移動/吃子
             int capture_bonus = 0;
