@@ -12,7 +12,7 @@ static int p1_steps = 0;
 static int p2_steps = 0;
 // 最大步數
 
-static const int MAX_STEPS = 40;
+static const int MAX_STEPS = 50;
 
 // ==[線上對戰狀態]==
 static int selected_game_mode = -1;       // -1 = 尚未選擇, 0 = LOCAL, 1 = ONLINE
